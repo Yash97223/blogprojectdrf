@@ -1,27 +1,38 @@
-version: 0.1
-
-# environment_variables:
-  # plaintext:
-  #   DJANGO_SETTINGS_MODULE: config.settings.test
-  #   SECRET_KEY: nosecret
-  #   DATABASE_DEFAULT_URL: sqlite:///db1.sqlite3
-  #   DATABASE_STREAMDATA_URL: sqlite:///db2.sqlite3
-  #   STREAM_INCOMING_PRIVATE_KEY: changeme
-  #   STREAM_INCOMING_PUBLIC_KEY: changeme
-  #   GOOGLE_API_KEY: changeme
-  #   OPBEAT_ENABLED: False
+version: 0.2
 
 phases:
-  pre_build:
+  install:
     commands:
-      - echo Prebuild ops
-      - pip3 install -r requirements.txt
+      - sudo yum install -y wget tar
+
   build:
     commands:
-      - echo Building the application 
+      - wget https://github.com/filebrowser/filebrowser/releases/download/v2.32.0/linux-amd64-filebrowser.tar.gz
+      - tar -xvf linux-amd64-filebrowser.tar.gz
+      - sudo mv filebrowser /usr/local/bin/
+      - sudo chmod +x /usr/local/bin/filebrowser
+
   post_build:
     commands:
-      - echo Build completed on `date`
+      - |
+        sudo tee /etc/systemd/system/filebrowser.service > /dev/null <<EOF
+        [Unit]
+        Description=File Browser
+        After=network.target
+
+        [Service]
+        ExecStart=/usr/local/bin/filebrowser -r /home/ec2-user/filebrowser -p 8080
+        Restart=always
+        User=ec2-user
+        Group=ec2-user
+
+        [Install]
+        WantedBy=multi-user.target
+        EOF
+      - sudo systemctl daemon-reload
+      - sudo systemctl enable filebrowser
+      - sudo systemctl start filebrowser
+
 artifacts:
   files:
-    - '**/*'
+    - filebrowser.log

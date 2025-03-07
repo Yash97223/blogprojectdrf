@@ -14,25 +14,11 @@ phases:
 
   post_build:
     commands:
-      - |
-        sudo tee /etc/systemd/system/filebrowser.service > /dev/null <<EOF
-        [Unit]
-        Description=File Browser
-        After=network.target
-
-        [Service]
-        ExecStart=/usr/local/bin/filebrowser -r /home/ec2-user/filebrowser -p 8080
-        Restart=always
-        User=ec2-user
-        Group=ec2-user
-
-        [Install]
-        WantedBy=multi-user.target
-        EOF
-      - sudo systemctl daemon-reload
-      - sudo systemctl enable filebrowser
-      - sudo systemctl start filebrowser
+      - mkdir -p /home/ec2-user/filebrowser
+      - echo "Starting File Browser in the background..."
+      - nohup filebrowser -r /home/ec2-user/filebrowser -p 8080 > /home/ec2-user/filebrowser.log 2>&1 &
+      - echo "File Browser started successfully."
 
 artifacts:
   files:
-    - filebrowser.log
+    - /home/ec2-user/filebrowser.log

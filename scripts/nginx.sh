@@ -1,13 +1,23 @@
-
 #!/usr/bin/bash
 
 sudo systemctl daemon-reload
 sudo rm -f /etc/nginx/sites-enabled/default
 
-sudo cp /home/ubuntu/Project_folder_name/nginx/nginx.conf /etc/nginx/sites-available/fodler_name_where_seetngs.py_is
-sudo ln -s /etc/nginx/sites-available/fodler_name_where_seetngs.py_is /etc/nginx/sites-enabled/
-#sudo ln -s /etc/nginx/sites-available/blog /etc/nginx/sites-enabled
-#sudo nginx -t
-sudo gpasswd -a www-data ubuntu
-sudo systemctl restart nginx
+# Define the correct folder where settings.py is located
+PROJECT_NAME="blogprojectdrf"  # Update this if your project folder is different
+NGINX_CONF_PATH="/home/ubuntu/${PROJECT_NAME}/nginx/nginx.conf"
 
+# Ensure the file exists before copying
+if [ -f "$NGINX_CONF_PATH" ]; then
+    sudo cp "$NGINX_CONF_PATH" "/etc/nginx/sites-available/${PROJECT_NAME}"
+    sudo ln -sf "/etc/nginx/sites-available/${PROJECT_NAME}" "/etc/nginx/sites-enabled/"
+else
+    echo "Error: Nginx configuration file not found at $NGINX_CONF_PATH"
+    exit 1
+fi
+
+# Add www-data user to ubuntu group
+sudo gpasswd -a www-data ubuntu
+
+# Test Nginx configuration before restarting
+sudo nginx -t && sudo systemctl restart nginx
